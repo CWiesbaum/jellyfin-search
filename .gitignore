@@ -1,1 +1,24 @@
 .devcontainer/devcontainer-lock.json
+
+# Rust
+/target/
+debug/
+release/
+*.rs.bk
+*.rlib
+*.prof*
+
+# Universal
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+*.log
+.env*
+
+
+# Added by cargo
+
+/target

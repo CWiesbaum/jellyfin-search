@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Movie Library</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 1rem;
+    background: #fafafa;
+    color: #111;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  h1 { font-size: 1.25rem; margin: 0; }
+  #search {
+    flex: 1 1 220px;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  #last-updated { font-size: 0.8rem; color: #666; white-space: nowrap; }
+  #empty-library, #empty-state { padding: 2rem 0; text-align: center; color: #666; }
+  [hidden] { display: none !important; }
+  #movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+  .movie-card { display: flex; flex-direction: column; }
+  .movie-thumb {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    background: #ddd;
+    border-radius: 4px;
+    display: block;
+  }
+  .movie-thumb-placeholder {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    background: #ddd;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-size: 0.75rem;
+    text-align: center;
+    padding: 0.5rem;
+    box-sizing: border-box;
+  }
+  .movie-title { font-weight: 600; margin-top: 0.4rem; font-size: 0.9rem; line-height: 1.25; }
+  .movie-meta { font-size: 0.75rem; color: #666; margin-top: 0.15rem; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #111; color: #eee; }
+    #search { background: #222; color: #eee; border-color: #444; }
+    #last-updated, .movie-meta, #empty-library, #empty-state { color: #aaa; }
+    .movie-thumb, .movie-thumb-placeholder { background: #333; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Movie Library</h1>
+  <input id="search" type="search" placeholder="Search by title…" autocomplete="off" />
+  <span id="last-updated"></span>
+</header>
+<div id="empty-library" hidden>Your library is empty — nothing to show yet.</div>
+<div id="empty-state" hidden>No movies match your search.</div>
+<div id="movie-grid"></div>
+<script id="catalog-data" type="application/json">__CATALOG_DATA_JSON__</script>
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById('catalog-data').textContent);
+  // Pre-sorted alphabetically by the export itself (src/catalog/model.rs); no
+  // client-side sort needed.
+  var movies = data.movies || [];
+  var grid = document.getElementById('movie-grid');
+  var emptyLibrary = document.getElementById('empty-library');
+  var emptyState = document.getElementById('empty-state');
+  var searchInput = document.getElementById('search');
+  var lastUpdated = document.getElementById('last-updated');
+
+  if (data.generatedAt) {
+    var generated = new Date(data.generatedAt);
+    lastUpdated.textContent = 'Last updated: ' + generated.toLocaleString();
+    lastUpdated.setAttribute('title', data.generatedAt);
+  }
+
+  function renderCard(movie) {
+    var card = document.createElement('div');
+    card.className = 'movie-card';
+
+    if (movie.thumbnail) {
+      var img = document.createElement('img');
+      img.className = 'movie-thumb';
+      img.loading = 'lazy';
+      img.src = movie.thumbnail;
+      img.alt = movie.title;
+      card.appendChild(img);
+    } else {
+      var placeholder = document.createElement('div');
+      placeholder.className = 'movie-thumb-placeholder';
+      placeholder.textContent = 'No image';
+      card.appendChild(placeholder);
+    }
+
+    var title = document.createElement('div');
+    title.className = 'movie-title';
+    title.textContent = movie.title;
+    card.appendChild(title);
+
+    var metaParts = [];
+    if (movie.releaseYear) metaParts.push(String(movie.releaseYear));
+    if (movie.genres && movie.genres.length) metaParts.push(movie.genres.join(', '));
+    var meta = document.createElement('div');
+    meta.className = 'movie-meta';
+    meta.textContent = metaParts.length ? metaParts.join(' • ') : '—';
+    card.appendChild(meta);
+
+    return card;
+  }
+
+  function render(filtered) {
+    grid.innerHTML = '';
+    if (filtered.length === 0) {
+      emptyState.hidden = false;
+      return;
+    }
+    emptyState.hidden = true;
+    var fragment = document.createDocumentFragment();
+    filtered.forEach(function (movie) {
+      fragment.appendChild(renderCard(movie));
+    });
+    grid.appendChild(fragment);
+  }
+
+  function applySearch() {
+    var query = searchInput.value.trim().toLowerCase();
+    if (!query) {
+      render(movies);
+      return;
+    }
+    render(
+      movies.filter(function (movie) {
+        return movie.title.toLowerCase().indexOf(query) !== -1;
+      })
+    );
+  }
+
+  if (movies.length === 0) {
+    // An empty library is valid, distinct from "no search results": nothing has
+    // been exported yet, so searching would be meaningless.
+    emptyLibrary.hidden = false;
+    searchInput.hidden = true;
+  } else {
+    searchInput.addEventListener('input', applySearch);
+    render(movies);
+  }
+})();
+</script>
+</body>
+</html>
