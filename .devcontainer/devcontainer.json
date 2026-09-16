@@ -1,0 +1,39 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/rust
+{
+	"name": "jellyfin-search",
+	"image": "mcr.microsoft.com/devcontainers/rust:trixie",
+
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {},
+		"ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+		"./features/speckit": {},
+		// Nested Docker daemon so containers (docker compose, testcontainers, etc.)
+		// can be built/run from inside this devcontainer.
+		// moby:false - not every Debian variant this image can target (e.g. trixie)
+		// still ships the moby-* apt packages; docker-ce is published for all of them.
+		"ghcr.io/devcontainers/features/docker-in-docker:4.1.0": {
+			"moby": false
+		}
+	},
+
+	// The rust base image ships without Node.js/npm; pin a proper Node Feature
+	// rather than relying on the claude-code Feature's own install fallback
+	// (which is not guaranteed to succeed on every Debian variant - see the java template).
+	"overrideFeatureInstallOrder": [
+		"ghcr.io/devcontainers/features/node:1",
+		"ghcr.io/anthropics/devcontainer-features/claude-code:1.0",
+		"./features/speckit"
+	],
+
+	"mounts": [
+		"source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind",
+		"source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind"
+	],
+
+	"customizations": {
+		"vscode": {
+			"extensions": ["anthropic.claude-code"]
+		}
+	}
+}

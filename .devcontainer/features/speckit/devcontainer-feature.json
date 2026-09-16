@@ -1,0 +1,25 @@
+{
+	"id": "speckit",
+	"version": "1.0.0",
+	"name": "GitHub Spec Kit (specify CLI)",
+	"description": "Installs GitHub's spec-kit `specify` CLI, along with the required Python runtime, via uv. Depends on the uv Feature (ghcr.io/va-h/devcontainers-features/uv:1) for the `uv`/`uvx` tooling.",
+	"keywords": ["spec-kit", "specify", "uv", "python"],
+	"options": {
+		"pythonVersion": {
+			"type": "string",
+			"description": "Python version installed via uv and used to run spec-kit.",
+			"proposals": ["3.12", "3.11", "3.13"],
+			"default": "3.12"
+		},
+		"specKitRepository": {
+			"type": "string",
+			"description": "Git URL that uv installs the specify-cli tool from (spec-kit source repository).",
+			"default": "https://github.com/github/spec-kit.git"
+		}
+	},
+	"dependsOn": {
+		"ghcr.io/va-h/devcontainers-features/uv:1": {
+			"shellautocompletion": true
+		}
+	}
+}
