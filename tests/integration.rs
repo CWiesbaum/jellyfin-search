@@ -34,3 +34,9 @@ mod test_stdout_contract;
 
 #[path = "integration/test_image_tag_query_param.rs"]
 mod test_image_tag_query_param;
+
+#[path = "integration/test_terminal_theme.rs"]
+mod test_terminal_theme;
+
+#[path = "integration/test_thumbnail_framing.rs"]
+mod test_thumbnail_framing;

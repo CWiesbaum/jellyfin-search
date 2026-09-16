@@ -5,13 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Movie Library</title>
 <style>
-  :root { color-scheme: light dark; }
+  :root {
+    --bg: #000000;
+    --fg: #33ff33;
+    --fg-dim: #1a8c1a;
+    color-scheme: dark;
+  }
   body {
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: ui-monospace, "Courier New", Menlo, Consolas, monospace;
     margin: 0;
     padding: 1rem;
-    background: #fafafa;
-    color: #111;
+    background: var(--bg);
+    color: var(--fg);
+  }
+  #banner {
+    margin: 0 0 1rem;
+    color: var(--fg);
+    line-height: 1.2;
+    overflow-x: auto;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   header {
     display: flex;
@@ -20,16 +33,20 @@
     gap: 0.75rem;
     margin-bottom: 1rem;
   }
-  h1 { font-size: 1.25rem; margin: 0; }
+  h1 { font-size: 1.25rem; margin: 0; color: var(--fg); }
   #search {
     flex: 1 1 220px;
     padding: 0.5rem 0.75rem;
     font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    font-family: inherit;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--fg-dim);
+    border-radius: 0;
   }
-  #last-updated { font-size: 0.8rem; color: #666; white-space: nowrap; }
-  #empty-library, #empty-state { padding: 2rem 0; text-align: center; color: #666; }
+  #search::placeholder { color: var(--fg-dim); }
+  #last-updated { font-size: 0.8rem; color: var(--fg-dim); white-space: nowrap; }
+  #empty-library, #empty-state { padding: 2rem 0; text-align: center; color: var(--fg-dim); }
   [hidden] { display: none !important; }
   #movie-grid {
     display: grid;
@@ -37,39 +54,48 @@
     gap: 1rem;
   }
   .movie-card { display: flex; flex-direction: column; }
-  .movie-thumb {
-    width: 100%;
-    aspect-ratio: 2 / 3;
-    object-fit: cover;
-    background: #ddd;
-    border-radius: 4px;
-    display: block;
-  }
+  .movie-thumb,
   .movie-thumb-placeholder {
+    position: relative;
     width: 100%;
     aspect-ratio: 2 / 3;
-    background: #ddd;
-    border-radius: 4px;
+    background: var(--bg);
+    border: 1px solid var(--fg-dim);
+    border-radius: 0;
+    box-sizing: border-box;
+  }
+  .movie-thumb { object-fit: cover; display: block; }
+  .movie-thumb-placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #888;
+    color: var(--fg-dim);
     font-size: 0.75rem;
     text-align: center;
     padding: 0.5rem;
-    box-sizing: border-box;
   }
-  .movie-title { font-weight: 600; margin-top: 0.4rem; font-size: 0.9rem; line-height: 1.25; }
-  .movie-meta { font-size: 0.75rem; color: #666; margin-top: 0.15rem; }
-  @media (prefers-color-scheme: dark) {
-    body { background: #111; color: #eee; }
-    #search { background: #222; color: #eee; border-color: #444; }
-    #last-updated, .movie-meta, #empty-library, #empty-state { color: #aaa; }
-    .movie-thumb, .movie-thumb-placeholder { background: #333; }
+  .movie-thumb::before,
+  .movie-thumb::after,
+  .movie-thumb-placeholder::before,
+  .movie-thumb-placeholder::after {
+    content: '+';
+    position: absolute;
+    top: -0.6em;
+    color: var(--fg-dim);
+    font-size: 0.9rem;
+    line-height: 1;
+    pointer-events: none;
   }
+  .movie-thumb::before, .movie-thumb-placeholder::before { left: -0.4em; }
+  .movie-thumb::after, .movie-thumb-placeholder::after { right: -0.4em; }
+  .movie-title { font-weight: 600; margin-top: 0.4rem; font-size: 0.9rem; line-height: 1.25; color: var(--fg); }
+  .movie-meta { font-size: 0.75rem; color: var(--fg-dim); margin-top: 0.15rem; }
 </style>
 </head>
 <body>
+<pre id="banner" aria-hidden="true">+-----------------------------+
+|        MOVIE LIBRARY        |
++-----------------------------+</pre>
 <header>
   <h1>Movie Library</h1>
   <input id="search" type="search" placeholder="Search by title…" autocomplete="off" />

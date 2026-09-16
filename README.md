@@ -13,7 +13,10 @@ this tool.
   year, genres, thumbnail).
 - Downloads each movie's thumbnail as a local image file.
 - Renders a single static `index.html` (with vanilla JS for client-side search/filter) and
-  the downloaded images into an output directory.
+  the downloaded images into an output directory, styled as a black-background,
+  green-text terminal with an ASCII-art banner — see
+  `specs/002-ascii-terminal-theme/` for that presentation's spec, plan, and design
+  decisions.
 - Writes that output atomically: a failed run never touches a previously generated,
   already-published output directory.
 
