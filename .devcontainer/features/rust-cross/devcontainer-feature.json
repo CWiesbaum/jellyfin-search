@@ -1,0 +1,14 @@
+{
+	"id": "rust-cross",
+	"version": "1.0.0",
+	"name": "Rust Cross-Compilation (cargo-zigbuild)",
+	"description": "Installs cargo-zigbuild plus the Zig toolchain (via pip's `ziglang` package - no manual tarball download/unzip) and adds a set of rustup cross-compilation targets, so `cargo xbuild --target <triple>` cross-compiles reliably without Docker/QEMU.",
+	"keywords": ["rust", "cargo", "cross-compilation", "zig", "cargo-zigbuild"],
+	"options": {
+		"targets": {
+			"type": "string",
+			"description": "Comma-separated rustup target triples to install for cross-compilation.",
+			"default": "x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu,x86_64-unknown-linux-musl,aarch64-unknown-linux-musl"
+		}
+	}
+}

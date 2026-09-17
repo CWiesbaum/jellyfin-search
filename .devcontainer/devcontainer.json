@@ -8,6 +8,9 @@
 		"ghcr.io/devcontainers/features/node:1": {},
 		"ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
 		"./features/speckit": {},
+		// cargo-zigbuild + Zig (via pip) for reliable cross-compilation
+		// (`cargo xbuild --target <triple>`) without Docker/QEMU.
+		"./features/rust-cross": {},
 		// Nested Docker daemon so containers (docker compose, testcontainers, etc.)
 		// can be built/run from inside this devcontainer.
 		// moby:false - not every Debian variant this image can target (e.g. trixie)
