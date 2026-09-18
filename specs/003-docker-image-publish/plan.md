@@ -20,8 +20,9 @@ already published and that both architectures run correctly before publishing.
 
 ## Technical Context
 
-**Language/Version**: Rust (stable toolchain, 2024 edition) — unchanged. This feature adds
-no new Rust code; it packages the existing compiled binary.
+**Language/Version**: Rust (stable toolchain, 2024 edition) — unchanged. This feature packages
+the existing compiled binary; it adds no new production Rust code, only a new integration
+test (see Testing below).
 
 **Primary Dependencies**: Docker (Dockerfile + Buildx for multi-platform manifests),
 `cargo-zigbuild` + Zig (already provisioned by `.devcontainer/features/rust-cross`, reused
@@ -30,23 +31,27 @@ publish), Alpine Linux (pinned minor-version tag, e.g. `alpine:3.20`, as the run
 
 **Storage**: N/A.
 
-**Testing**: No new `cargo test` cases (no Rust logic changes). A new
-`scripts/docker-smoke-test.sh` validates the built image: runs `--help` and a full export
-against the existing `wiremock`-backed fixture approach (reusing the pattern from
-`tests/integration/`) inside the container for each target platform (ARM64 verified via
-QEMU user-mode emulation of the *already-compiled* static binary — not of `rustc` — which is
-a well-supported use of emulation, unlike the compilation-under-emulation path this repo
-already rejected). This script is written first, expected to fail (no image exists yet),
-then made to pass once the Dockerfile and cross-compiled binaries exist — the Test-First
-principle applied to this feature's actual deliverable (an image), not to Rust unit tests
-that don't apply here.
+**Testing**: A new `scripts/docker-smoke-test.sh` validates the built image: runs `--help`
+and a full export against the existing `wiremock`-backed fixture approach, inside the
+container, for each target platform (ARM64 verified via QEMU user-mode emulation of the
+*already-compiled* static binary — not of `rustc` — which is a well-supported use of
+emulation, unlike the compilation-under-emulation path this repo already rejected). Reusing
+that existing wiremock-backed pattern from a shell script required one new Rust integration
+test, `tests/integration/test_docker_image_smoke.rs` (registered in `tests/integration.rs`):
+it starts the same in-process mock Jellyfin server as the other integration tests, but
+invokes `docker run <image>` instead of the native binary, so the container is driven by the
+same fixture data rather than a second, hand-rolled mock server implementation in bash. This
+is the one addition to `src`/`tests` this feature makes — everything else is unchanged. The
+smoke-test script is written first, expected to fail (no image exists yet), then made to
+pass once the Dockerfile and cross-compiled binaries exist — the Test-First principle
+applied to this feature's actual deliverable (an image).
 
 **Target Platform**: Linux containers on x86_64 and ARM64 hosts (Docker Hub image); build
 executes on GitHub Actions' Linux x86_64 runners cross-compiling for both targets.
 
 **Project Type**: Single project (unchanged) — this feature adds packaging/CI artifacts
-(Dockerfile, CI workflow, a smoke-test script) at the repository root and under
-`.github/workflows/`, and touches no existing `src/` or `tests/` code.
+(Dockerfile, CI workflow, scripts) at the repository root and under `.github/workflows/`,
+plus one new integration test (see Testing above); no existing `src/` code changes.
 
 **Performance Goals**: N/A for the tool itself (unchanged runtime behavior). CI budget: the
 full build-verify-publish workflow should complete in a time comparable to a normal
@@ -156,11 +161,21 @@ scripts/
 
 README.md                           # MODIFIED: add "Run via Docker" section (FR-011)
                                      # alongside the existing "Build"/"Run" instructions.
+
+tests/
+├── integration.rs                    # MODIFIED: registers the new module below.
+└── integration/
+    └── test_docker_image_smoke.rs    # NEW: starts the same in-process wiremock mock
+                                       # Jellyfin server as the other integration tests, but
+                                       # invokes `docker run <image>` instead of the native
+                                       # binary — see Testing above.
 ```
 
-Every existing file under `src/` and `tests/` is unchanged by this feature — it is purely
-additive packaging/CI, consistent with `001-remote-movie-catalog` and
-`002-ascii-terminal-theme` being untouched by it.
+Every existing file under `src/` is unchanged by this feature — it is purely additive
+packaging/CI, consistent with `001-remote-movie-catalog` and `002-ascii-terminal-theme`
+being untouched by it. `tests/` gains exactly one new integration test (above), needed to
+reuse the existing wiremock-backed mock-server pattern against a container instead of
+duplicating a mock server in bash.
 
 **Structure Decision**: Option 1 (single project), unchanged. This feature adds
 packaging/CI artifacts alongside the existing single Rust CLI project rather than

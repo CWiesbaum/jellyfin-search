@@ -370,3 +370,15 @@ Task: "Create scripts/current-version.sh"
   changes are introduced.
 - Commit after each task or logical group.
 - Stop at any checkpoint to validate a story independently before moving to the next.
+
+---
+
+## Phase 7: Convergence
+
+- [X] T024 Update plan.md's Technical Context (Language/Version, Testing, Project Type
+  sections) and Project Structure section to reflect that `tests/integration.rs` was
+  modified and `tests/integration/test_docker_image_smoke.rs` was added — reusing the
+  existing wiremock-backed mock-server pattern from a shell script required a new Rust
+  integration test to drive the container, so the plan's original "no new Rust code
+  / tests unchanged" statements are no longer accurate per plan: Technical Context,
+  Project Structure (contradicts)
