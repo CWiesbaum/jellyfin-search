@@ -1,0 +1,57 @@
+# Builds and publishes the multi-architecture Docker image whenever a stable version tag
+# is pushed. See specs/003-docker-image-publish/ for the full spec, plan, and design
+# decisions behind this workflow.
+#
+# Required repository secrets:
+#   DOCKERHUB_USERNAME - Docker Hub username for the cwiesbaum namespace
+#   DOCKERHUB_TOKEN     - Docker Hub access token with push permission for that namespace
+name: Publish Docker image
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - '!v*-*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install cargo-zigbuild + Zig cross-compilation toolchain
+        # Mirrors .devcontainer/features/rust-cross/install.sh's approach: the ubuntu-latest
+        # runner already ships a Rust toolchain via actions-rs/toolchain-less default, so
+        # this only adds what that toolchain lacks (Zig + cargo-zigbuild + musl targets).
+        run: |
+          python3 -m pip install --break-system-packages ziglang 2>/dev/null || python3 -m pip install ziglang
+          cargo install --locked cargo-zigbuild
+          rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl
+
+      - name: Cross-compile both target binaries
+        run: ./scripts/build-cross-binaries.sh
+
+      - name: Verify tag matches Cargo.toml version
+        run: ./scripts/check-version-matches-tag.sh "${{ github.ref_name }}"
+
+      - name: Set up QEMU (for running the arm64 image, not compiling it)
+        run: docker run --privileged --rm tonistiigi/binfmt --install arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Smoke-test amd64 image
+        run: ./scripts/docker-smoke-test.sh linux/amd64
+
+      - name: Smoke-test arm64 image
+        run: ./scripts/docker-smoke-test.sh linux/arm64
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publish multi-architecture image
+        run: ./scripts/publish-image.sh

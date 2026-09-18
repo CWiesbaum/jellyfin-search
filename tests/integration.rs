@@ -40,3 +40,6 @@ mod test_terminal_theme;
 
 #[path = "integration/test_thumbnail_framing.rs"]
 mod test_thumbnail_framing;
+
+#[path = "integration/test_docker_image_smoke.rs"]
+mod test_docker_image_smoke;

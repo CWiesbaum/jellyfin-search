@@ -1,0 +1,7 @@
+# Only the pre-built cross-compiled binaries (see scripts/build-cross-binaries.sh and
+# specs/003-docker-image-publish/research.md §1-2) are needed in the Docker build
+# context. Everything else — source, target/, git history, specs — is excluded so it
+# never accidentally ends up in an image layer (FR-005).
+*
+!dist
+!dist/**

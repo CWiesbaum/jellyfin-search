@@ -22,3 +22,7 @@ Thumbs.db
 # Added by cargo
 
 /target
+
+# Docker: cross-compiled binaries staged for the Dockerfile build context
+# (see specs/003-docker-image-publish/research.md §1-2) — build output, not source.
+/dist/

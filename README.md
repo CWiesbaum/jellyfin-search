@@ -5,7 +5,8 @@ self-contained static site — a browsable, searchable movie catalog you can hos
 with no connection back to Jellyfin or the home network required at view time.
 
 See `specs/001-remote-movie-catalog/` for the full spec, plan, and design decisions behind
-this tool.
+this tool. A multi-architecture Docker image is also published — see
+`specs/003-docker-image-publish/` for that packaging's spec, plan, and design decisions.
 
 ## What it does
 
@@ -66,6 +67,40 @@ jellyfin-catalog-export \
 
 See `specs/001-remote-movie-catalog/contracts/cli-interface.md` for the full contract,
 including the stdout/stderr behavior.
+
+## Run via Docker
+
+A ready-to-run image is published to Docker Hub for both x86_64 and ARM64 hosts — no Rust
+toolchain needed:
+
+```bash
+docker run --rm \
+  -e JELLYFIN_API_KEY \
+  --user "$(id -u):$(id -g)" \
+  -v "$(pwd)/out:/data" \
+  cwiesbaum/jellyfin-catalog-export:latest \
+  --server-url "http://<jellyfin-host>:8096" \
+  --output-dir /data/site
+```
+
+Notes:
+
+- `--user "$(id -u):$(id -g)"` runs the container as your own user instead of its default
+  non-root user, so it can write into the bind-mounted `./out` directory.
+- `--output-dir` must be a subdirectory *within* the mounted volume (`/data/site` above),
+  not the mount point itself (`/data`) — the tool publishes its output atomically by
+  renaming into place, which the kernel doesn't allow directly onto a mount point.
+- All CLI flags and exit codes above apply unchanged inside the container.
+
+### Image tags
+
+| Tag | Meaning |
+|---|---|
+| `latest` | Always the newest stable released version. |
+| `<X.Y.Z>` (e.g. `0.1.0`) | Pinned to that exact released version — immutable once published, safe to depend on for reproducible deployments. |
+
+See `specs/003-docker-image-publish/contracts/docker-image-contract.md` for the full image
+contract (tags, platforms, volumes).
 
 ## Testing
 
