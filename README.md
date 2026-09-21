@@ -1,12 +1,17 @@
 # jellyfin-catalog-export
 
+**Source**: <https://github.com/CWiesbaum/jellyfin-search>
+
 A Rust CLI tool that exports a Jellyfin server's movie library and generates a
 self-contained static site — a browsable, searchable movie catalog you can host anywhere,
 with no connection back to Jellyfin or the home network required at view time.
 
 See `specs/001-remote-movie-catalog/` for the full spec, plan, and design decisions behind
 this tool. A multi-architecture Docker image is also published — see
-`specs/003-docker-image-publish/` for that packaging's spec, plan, and design decisions.
+`specs/003-docker-image-publish/` for that packaging's spec, plan, and design decisions. The
+Docker Hub repository page's own description and overview are kept in sync with this file
+automatically — see `specs/004-dockerhub-readme-sync/` for that feature's spec, plan, and
+design decisions.
 
 ## What it does
 

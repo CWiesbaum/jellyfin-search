@@ -1,6 +1,7 @@
 # Builds and publishes the multi-architecture Docker image whenever a stable version tag
 # is pushed. See specs/003-docker-image-publish/ for the full spec, plan, and design
-# decisions behind this workflow.
+# decisions behind this workflow, and specs/004-dockerhub-readme-sync/ for the
+# sync-dockerhub-overview job below.
 #
 # Required repository secrets:
 #   DOCKERHUB_USERNAME - Docker Hub username for the cwiesbaum namespace
@@ -12,9 +13,13 @@ on:
     tags:
       - 'v*.*.*'
       - '!v*-*'
+  # Lets the Docker Hub description/overview be re-synced on demand (e.g. after a README
+  # edit) without cutting a new release — see specs/004-dockerhub-readme-sync/.
+  workflow_dispatch: {}
 
 jobs:
   publish:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -55,3 +60,28 @@ jobs:
 
       - name: Publish multi-architecture image
         run: ./scripts/publish-image.sh
+
+  sync-dockerhub-overview:
+    # Runs after `publish` succeeds on a real release, or standalone when manually
+    # triggered via workflow_dispatch (in which case `publish` is skipped by its own
+    # `if:` above, and `needs.publish.result == 'skipped'` still allows this job to run).
+    # A failure here is surfaced clearly (no continue-on-error/suppressed exit status, per
+    # FR-006 and constitution Principle IV) but — being a separate job — can never affect
+    # an already-succeeded `publish` job's image tag(s) (FR-007).
+    needs: publish
+    if: |
+      always() &&
+      (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Sync Docker Hub description and overview
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: cwiesbaum/jellyfin-catalog-export
+          short-description: "Export a Jellyfin movie library to a self-contained static site"
+          readme-filepath: ./README.md
