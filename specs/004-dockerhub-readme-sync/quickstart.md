@@ -36,9 +36,12 @@ grep -A6 'dockerhub-description' .github/workflows/docker-publish.yml
 ```
 
 **Expected outcome**: confirms the step uses `peter-evans/dockerhub-description@v4`, the
-existing `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` secrets, `readme-filepath: ./README.md`, and
-a `short-description` under 100 characters (research.md §1, §3) — and that it comes *after*
-the "Publish multi-architecture image" step (research.md §2).
+`DOCKERHUB_USERNAME` secret plus a dedicated `DOCKERHUB_DESCRIPTION_TOKEN` secret (needs
+Read/Write/Delete scope — `DOCKERHUB_TOKEN` alone is Read/Write and gets "Error: Forbidden"
+from this action's Hub API call; see plan.md's Primary Dependencies), `readme-filepath:
+./README.md`, and a `short-description` under 100 characters (research.md §1, §3) — and
+that it's in the `sync-dockerhub-overview` job, which runs after `publish` succeeds (or
+standalone via `workflow_dispatch`; plan.md's "Independent trigger" section).
 
 ## 4. Full validation (real publish, or a manual sync)
 

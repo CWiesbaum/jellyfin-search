@@ -2,11 +2,16 @@
 
 ## 1. How to update Docker Hub's repository description and overview from CI
 
-**Decision**: Use the `peter-evans/dockerhub-description@v4` GitHub Action as a new step in
-the existing `.github/workflows/docker-publish.yml`, authenticating with the same
-`DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` repository secrets already used by
-`docker/login-action`, with `readme-filepath: ./README.md` and a literal `short-description`
-string.
+**Decision**: Use the `peter-evans/dockerhub-description@v4` GitHub Action in the existing
+`.github/workflows/docker-publish.yml`, with `readme-filepath: ./README.md` and a literal
+`short-description` string.
+
+**Addendum (discovered on first real run)**: authenticating with the existing
+`DOCKERHUB_TOKEN` secret fails with `Error: Forbidden` — this action's Hub API call requires
+a token with Read/Write/Delete scope, while `DOCKERHUB_TOKEN` is scoped Read/Write (all
+`docker/login-action`'s image push needs). A separate `DOCKERHUB_DESCRIPTION_TOKEN` secret
+(Read/Write/Delete) was added for this action specifically, keeping the image-push job's
+credentials unchanged and least-privileged. See plan.md's Primary Dependencies.
 
 **Rationale**: Docker Hub has no first-class `docker` CLI or `buildx` command for updating a
 repository's short/full description — only its Hub API v2 (`POST /v2/users/login/` then

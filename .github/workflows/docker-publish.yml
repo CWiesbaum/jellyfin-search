@@ -4,8 +4,13 @@
 # sync-dockerhub-overview job below.
 #
 # Required repository secrets:
-#   DOCKERHUB_USERNAME - Docker Hub username for the cwiesbaum namespace
-#   DOCKERHUB_TOKEN     - Docker Hub access token with push permission for that namespace
+#   DOCKERHUB_USERNAME          - Docker Hub username for the cwiesbaum namespace
+#   DOCKERHUB_TOKEN             - Docker Hub access token with Read/Write scope (image push)
+#   DOCKERHUB_DESCRIPTION_TOKEN - Docker Hub access token with Read/Write/Delete scope,
+#                                 required by peter-evans/dockerhub-description's Hub API
+#                                 call (Read/Write alone gets "Error: Forbidden" from it).
+#                                 Kept separate from DOCKERHUB_TOKEN so the image-push job
+#                                 doesn't run with delete-capable credentials it never needs.
 name: Publish Docker image
 
 on:
@@ -81,7 +86,7 @@ jobs:
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          password: ${{ secrets.DOCKERHUB_DESCRIPTION_TOKEN }}
           repository: cwiesbaum/jellyfin-catalog-export
           short-description: "Export a Jellyfin movie library to a self-contained static site"
           readme-filepath: ./README.md

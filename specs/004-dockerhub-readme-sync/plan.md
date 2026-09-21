@@ -45,8 +45,14 @@ documentation (README.md); no Rust code is added or modified.
 GitHub Action that wraps Docker Hub's Hub API v2 login + repository-update calls — chosen
 over a hand-rolled `curl`/API-token script for the same reason `003-docker-image-publish`
 used `docker/login-action` and `docker/setup-buildx-action` rather than reimplementing their
-logic: Simplicity/YAGNI). Reuses the existing `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN`
-repository secrets already configured for `docker/login-action`.
+logic: Simplicity/YAGNI). Reuses the existing `DOCKERHUB_USERNAME` secret, but requires a
+**new** `DOCKERHUB_DESCRIPTION_TOKEN` secret rather than reusing `DOCKERHUB_TOKEN`
+(discovered when the first real run failed with "Error: Forbidden"): the action's Hub API
+call to update repository metadata requires a token with **Read/Write/Delete** scope, while
+`DOCKERHUB_TOKEN` is scoped Read/Write only (sufficient for `docker/login-action`'s image
+push, per the action's own documented requirement). Kept as a separate secret rather than
+widening `DOCKERHUB_TOKEN`'s scope, so the image-push job doesn't run with delete-capable
+credentials it doesn't need.
 
 **Storage**: N/A.
 
@@ -144,9 +150,11 @@ scripts/
                                      # runs when publish succeeds OR was skipped, so it also
                                      # runs standalone on manual dispatch), using
                                      # peter-evans/dockerhub-description@v4 with the
-                                     # existing DOCKERHUB_USERNAME/DOCKERHUB_TOKEN secrets,
-                                     # a literal short-description string, and
-                                     # readme-filepath pointing at ./README.md.
+                                     # existing DOCKERHUB_USERNAME secret, a new
+                                     # DOCKERHUB_DESCRIPTION_TOKEN secret (Read/Write/Delete
+                                     # scope — see Primary Dependencies above), a literal
+                                     # short-description string, and readme-filepath
+                                     # pointing at ./README.md.
 ```
 
 Every existing file under `src/` and `tests/` is unchanged by this feature — it is purely a
